@@ -109,3 +109,8 @@ repos:
       - id: yamllint
 
   # Project-specific custom hooks
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.8.1
+    hooks:
+      - id: nbstripout
+        args: [--keep-output, --keep-id, --drop-empty-cells]
