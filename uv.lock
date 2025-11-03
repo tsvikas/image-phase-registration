@@ -408,20 +408,26 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "image-registration" },
-    { name = "jupyterlab" },
     { name = "matplotlib" },
     { name = "numpy" },
     { name = "scikit-image" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "jupyterlab" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "image-registration", specifier = ">=0.2.9" },
-    { name = "jupyterlab", specifier = ">=4.4.1" },
     { name = "matplotlib", specifier = ">=3.10.1" },
     { name = "numpy", specifier = ">=2.2.5" },
     { name = "scikit-image", specifier = ">=0.25.2" },
 ]
+
+[package.metadata.requires-dev]
+dev = [{ name = "jupyterlab", specifier = ">=4.4.1" }]
 
 [[package]]
 name = "image-registration"
