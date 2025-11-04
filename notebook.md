@@ -16,10 +16,10 @@ kernelspec:
 
 +++
 
-How do we register two images, when one i a translated and rotated version of the other?
-There are several methods using Image features, but what if there are no image features?
+How do we register two images when one is a translated and rotated version of the other?
+There are several methods using image features, but what if there are no image features?
 
-One can solve the case of a translated image using the Phase Correction Method, which perform FFT. In the FFT domain, a translation is encoded in the phase of the complex numbers.
+One can solve the case of a translated image using the Phase Correlation Method, which performs FFT. In the FFT domain, a translation is encoded in the phase of the complex numbers.
 
 In this quick algorithm, we assume a function for translation exists (there are various common implementations), and enhance it by adding a correction for the rotation.
 
@@ -178,7 +178,7 @@ for (name, image), ax in zip(images.items(), axss.flatten()):
 
 +++
 
-we can see that after the Fourier, translations are irrelevant (i.e. they are encoded in the phase), only rotations remains
+We can see that after the Fourier transform, translations are irrelevant (i.e., they are encoded in the phase); only rotations remain.
 
 ```{code-cell} ipython3
 def fft(image):
@@ -226,9 +226,9 @@ imshow_with_colorbar(
 
 +++
 
-so, if we transform the fft image to polar coordinates, translations will be irrelevant and rotations will be translations.
+So, if we transform the FFT image to polar coordinates, translations will be irrelevant and rotations will become translations.
 
-notice how the images on the side are translated downward by the degree amount.
+Notice how the images on the side are translated downward by the degree amount.
 
 ```{code-cell} ipython3
 def to_polar(image):
@@ -261,8 +261,8 @@ imshow_with_colorbar(fft(to_polar(fft_phase(image4))))
 
 +++
 
-we use the image registration function to unrotate.
-This image registration is actually working in the FFT of the input image (so, in our case FFT of polar of FFT), and uses the phase information to determine the translation.
+We use the image registration function to unrotate.
+This image registration actually works in the FFT of the input image (so, in our case, FFT of polar of FFT), and uses the phase information to determine the translation.
 
 ```{code-cell} ipython3
 def unrotate_image(src, dst):
@@ -297,7 +297,7 @@ for (name, image), ax in zip(unrotated_images.items(), axss.flatten()):
     imshow_with_colorbar(image, ax, title=f"$Unrotated[square_{{{name}}}]$")
 ```
 
-we use the same function to untranslate
+We use the same function to untranslate.
 
 ```{code-cell} ipython3
 def untranslate_image(src, dst):
@@ -325,7 +325,7 @@ for (name, image), ax in zip(fixed_images.items(), axss.flatten()):
 
 +++
 
-This demonstrate the use of the method on an image that lacks features.
+This demonstrates the use of the method on an image that lacks features.
 
 +++
 
@@ -355,7 +355,7 @@ image = image / image.sum() * image_sum
 imshow_with_colorbar(image)
 ```
 
-we take this upscaled generated image and sample 2 images from it, with slight rotation/translation between them
+We take this upscaled generated image and sample 2 images from it, with slight rotation/translation between them.
 
 ```{code-cell} ipython3
 margin = N // 10
@@ -385,7 +385,7 @@ for _i in range(7):
 
 +++
 
-we use the same functions from before to fix the 2nd image to the first
+We use the same functions from before to register the 2nd image to the first.
 
 ```{code-cell} ipython3
 images = [image1, image2]
@@ -406,7 +406,7 @@ axss[0][1].set_title("fit original to itself (should stay the same)")
 axss[1][1].set_title("fit transformed to original");
 ```
 
-here we compare 2 images using the R and G channels of an RGB image.
+Here we compare 2 images using the R and G channels of an RGB image.
 
 ```{code-cell} ipython3
 image2_fixed = untranslate_image(unrotate_image(image2, image1), image1)
