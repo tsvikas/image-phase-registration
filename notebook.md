@@ -57,6 +57,10 @@ def imshow_with_colorbar(img, ax=None, title=None, **kwargs):
 
 # PCM
 
++++
+
+This section demonstrates the basic Phase Correlation Method on a simple translation case using the Hubble Deep Field image. We extract two overlapping regions with a known translation and verify that PCM can recover the offset.
+
 ```{code-cell} ipython3
 image0 = skimage.data.hubble_deep_field().mean(axis=-1)
 
@@ -109,6 +113,17 @@ ax.add_patch(plt.Circle((dx, dy), 10, color="r", fill=False))
 
 +++
 
+This section demonstrates the full algorithm for handling both rotation and translation. The algorithm workflow is:
+
+1. **Compute FFT magnitude** of both images (translations become phase, rotations remain visible)
+1. **Transform to polar coordinates** (rotations become vertical translations)
+1. **Apply Phase Correlation Method** to detect the rotation angle
+1. **Unrotate** the source image
+1. **Apply Phase Correlation Method** again to detect the translation
+1. **Untranslate** the source image
+
++++
+
 ## create the image
 
 ```{code-cell} ipython3
@@ -121,7 +136,7 @@ h, w = N // 5, N // 4
 image1[N // 2 - h : N // 2 + h, N // 2 - w : N // 2 + w] = 1
 images["original"] = image1
 
-# to demonstrate the method, we will show 3 image: translated, rotated, and both
+# to demonstrate the method, we will show 3 images: translated, rotated, and both
 theta_radians = np.deg2rad(10)
 translation = (
     np.array(
@@ -268,19 +283,23 @@ This image registration actually works in the FFT of the input image (so, in our
 def unrotate_image(src, dst):
     src_fft = to_polar(fft(src))
     dst_fft = to_polar(fft(dst))
-    dr, dq, var_r, var_q = image_registration.chi2_shift(
+    # chi2_shift returns: delta_radius, delta_angle, variance_r, variance_angle
+    delta_r, delta_angle, var_r, var_angle = image_registration.chi2_shift(
         src_fft, dst_fft, boundary="wrap"
     )
+    # Wrap delta_r to [-dr_max/2, dr_max/2] range
+    # (should be near zero for pure rotation)
     dr_max = src_fft.shape[1]
-    dr = (dr + dr_max // 2) % dr_max - dr_max // 2
-    assert abs(dr) < 0.5
-    dq_deg = 360 * dq / src_fft.shape[0]
-    dq_deg = (dq_deg + 180) % 360 - 180
+    delta_r = (delta_r + dr_max // 2) % dr_max - dr_max // 2
+    assert abs(delta_r) < 0.5
+    # Convert delta_angle from pixels to degrees, wrapping to [-180, 180]
+    delta_angle_deg = 360 * delta_angle / src_fft.shape[0]
+    delta_angle_deg = (delta_angle_deg + 180) % 360 - 180
 
     return skimage.transform.warp(
         src,
         inverse_map=skimage.transform.AffineTransform(
-            rotation=np.deg2rad(dq_deg)
+            rotation=np.deg2rad(delta_angle_deg)
         ).inverse,
         mode="wrap",
     )
@@ -453,8 +472,11 @@ fft2 = np.fft.fft2(images[1])
 ang = fft1 * fft2.conj() / np.abs(fft1 * fft2)
 image0b = np.fft.ifft2(ang)
 
-a = np.unravel_index(image0b.argmax(), image0b.shape)
-ax, _cax = imshow_with_colorbar(np.abs(image0b), title=a)
-ax.add_patch(plt.Circle((120 - 13, 120 - 17), 5, color="r", fill=False))
+peak_location = np.unravel_index(image0b.argmax(), image0b.shape)
+ax, _cax = imshow_with_colorbar(np.abs(image0b), title=peak_location)
+# Expected translation (dx, dy) = (13, 17) from earlier transform
+expected_x = image0b.shape[1] // 2 - dx
+expected_y = image0b.shape[0] // 2 - dy
+ax.add_patch(plt.Circle((expected_x, expected_y), 5, color="r", fill=False))
 # imshow_with_colorbar(np.angle(image0b))
 ```
